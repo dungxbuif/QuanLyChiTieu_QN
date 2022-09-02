@@ -1,7 +1,7 @@
 from typing import Any
 
 from app import models, schemas
-from app.api import deps
+from app.api import dependencies
 from app.core.celery_app import celery_app
 from app.utils import send_test_email
 from fastapi import APIRouter, Depends
@@ -13,7 +13,7 @@ router = APIRouter()
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 def test_celery(
     msg: schemas.Msg,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
 ) -> Any:
     """
     Test Celery worker.
@@ -25,7 +25,7 @@ def test_celery(
 @router.post("/test-email/", response_model=schemas.Msg, status_code=201)
 def test_email(
     email_to: EmailStr,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
 ) -> Any:
     """
     Test emails.

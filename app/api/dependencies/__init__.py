@@ -1,6 +1,7 @@
-from typing import Generator
+import logging
+from typing import Generator, List
 
-from app import crud, models, schemas
+from app import models, schemas, services
 from app.core import security
 from app.core.config import settings
 from app.db.session import SessionLocal
@@ -9,6 +10,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
+
+logging.basicConfig(level=logging.INFO)
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -36,7 +39,7 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    user = crud.user.get(db, id=token_data.sub)
+    user = services.user.get(db, id=token_data.sub)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -45,7 +48,7 @@ def get_current_user(
 def get_current_active_user(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
-    if not crud.user.is_active(current_user):
+    if not services.user.is_active(current_user):
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
@@ -53,8 +56,17 @@ def get_current_active_user(
 def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
-    if not crud.user.is_superuser(current_user):
+    if not services.user.is_admin(current_user):
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+class RoleChecker:
+    def __init__(self, allowed_roles: List):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, user: models.User = Depends(get_current_active_user)):
+        if user.role not in self.allowed_roles:
+            logger.debug(f"User with role {user.role} not in {self.allowed_roles}")
+            raise HTTPException(status_code=403, detail="Operation not permitted")

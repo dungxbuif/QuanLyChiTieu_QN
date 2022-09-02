@@ -1,8 +1,10 @@
 import re
 from uuid import uuid4
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 
 def pluralize(noun: str):
@@ -17,10 +19,13 @@ def pluralize(noun: str):
 
 @as_declarative()
 class Base:
-    id = Column(String, primary_key=True, index=True,default=str(uuid4()))
+    id=Column(String, primary_key=True, index=True,default=str(uuid4()))
     __name__: str
     # Generate __tablename__ automatically
     @declared_attr
     def __tablename__(cls) -> str:
-        carmalCase_to_snakecase = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
+        carmalCase_to_snakecase=re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
         return pluralize(carmalCase_to_snakecase)
+
+    created_at=Column(TIMESTAMP(timezone=True), nullable=False,server_default=text('now()'))
+    creator=Column(Integer, nullable=True,)

@@ -2,7 +2,8 @@
 
 from app.core.security import get_password_hash
 from app.db.base_class import Base
-from sqlalchemy import Boolean, Column, String, event
+from sqlalchemy import Boolean, Column, String
+from sqlalchemy.orm import relationship
 
 
 class User(Base):
@@ -11,7 +12,6 @@ class User(Base):
     password = Column(String, nullable=False)
     is_active = Column(Boolean(), default=True)
     is_admin = Column(Boolean(), default=False)
-
     def hash_password(self, password):
         self.password = get_password_hash(password)
 

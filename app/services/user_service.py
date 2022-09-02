@@ -5,10 +5,10 @@ from typing import Any, Dict, Optional, Union
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.crud.base import CRUDBase
-from app.models.user import User
+from app.models.user_model import User
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserUpdate
+from app.services.base_service import CRUDBase
 from sqlalchemy.orm import Session
 
 
@@ -20,7 +20,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         created_user = User(
             **user_create,
             password=get_password_hash(user_create.password),
-            is_superuser=False,
+            is_admin=False,
         )
         db.add(created_user)
         db.commit()
@@ -80,4 +80,4 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user.is_admin
 
 
-user = CRUDUser(User)
+user_service = CRUDUser(User)
